@@ -4,12 +4,20 @@
 
 """
 
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QLayout,
-                               QApplication, QMessageBox, QMenu, QLabel,
-                               QPushButton)
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QLayout,
+    QApplication,
+    QMessageBox,
+    QMenu,
+    QLabel,
+    QPushButton,
+)
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import QPropertyAnimation, Property
-from Window_insert import WindowInsert
+from window_logic import WindowInsert
 
 
 class MyMainWindow(QMainWindow):
@@ -25,7 +33,6 @@ class MyMainWindow(QMainWindow):
         self.main_layout.sizeConstraint = QLayout.SetDefaultConstraint
         self.main_layout.addWidget(self.form_widget)
         # form_widget has its own main_widget where I put all other widgets onto
-
 
         self.main_widget.setLayout(self.main_layout)
 
@@ -45,25 +52,29 @@ class MyMainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # --- Set File item Top Menu --- #
-        file_menu = menubar.addMenu('File')
+        file_menu = menubar.addMenu("File")
 
         # --- Quit item -- #
-        f_quit_action = file_menu.addAction('Quit')
+        f_quit_action = file_menu.addAction("Quit")
         f_quit_action.setStatusTip("Close Program")
         f_quit_action.triggered.connect(QApplication.instance().quit)
 
         # --- Help menu --- #
-        help_menu = menubar.addMenu('Help')
-        ab_action = help_menu.addAction('About')
+        help_menu = menubar.addMenu("Help")
+        ab_action = help_menu.addAction("About")
 
-        self.statusBar().showMessage('Testing')
-
+        self.statusBar().showMessage("Testing")
 
         self.show()
 
     def closeEvent(self, event: QCloseEvent):
-        reply = QMessageBox.question(self, 'Message', 'Are you sure you want to Quit',
-                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(
+            self,
+            "Message",
+            "Are you sure you want to Quit",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
 
         if reply == QMessageBox.Yes:
             event.accept()
@@ -79,12 +90,12 @@ class MyMainWindow(QMainWindow):
 
 def run():
     app = QApplication([])
-    app.setStyle('Fusion')
+    app.setStyle("Fusion")
 
     ex = MyMainWindow()
     ex.show()
     app.exec_()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

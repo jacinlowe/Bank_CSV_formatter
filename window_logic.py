@@ -19,6 +19,8 @@ from PySide6.QtCore import Qt, Slot
 import Bank_functions
 from time import sleep
 
+from QtWidgetBuilder import Button, Status, InputLine, layout_cls, LayoutEnum, Checkbox
+
 
 class WindowInsert(QWidget):
     def __init__(self):
@@ -28,72 +30,66 @@ class WindowInsert(QWidget):
 
     def setup(self):
         # Quit button#
-        self.btn_quit = QPushButton("Force Quit", self)
-        self.btn_quit.clicked.connect(QApplication.instance().quit)
-        self.btn_quit.resize(self.btn_quit.sizeHint())
-        self.btn_quit.setMaximumSize(100, 20)
-        # self.btn_quit.move(90, 100)
+        self.btn_quit = Button("Force Quit", QApplication.instance().quit, (100, 20))
 
         # call function button #
-        btn_test_function = QPushButton("Open CSV File", self)
-        btn_test_function.clicked.connect(self.csv_gotten)
-        btn_test_function.resize(btn_test_function.sizeHint())
+        btn_input_csv = Button("Open CSV File", self.select_csv_files)
 
         # Run script function
-        btn_run_script = QPushButton("run script", self)
-        btn_run_script.clicked.connect(self.run_script)
-        btn_run_script.resize(btn_run_script.sizeHint())
+        btn_run_script = Button("run script", self.run_script, (200, 30))
 
         # set Satus label
-        self.status = "Status: "
-        self.label = QLabel(self)
-        self.s_html = f"<font color=red size=5> {self.status} </font>"
-        self.label.setText(self.s_html + "No CSV File added!")
-        # self.label.move(10, 100)
+        self.label = Status()
 
         # set up text edit
-        self.csv_select = QLineEdit()
-        self.csv_select.setPlaceholderText("Input CSV File")
-        self.csv_select.setContentsMargins(0, 0, 0, 0)
-        self.csv_select.resize(self.csv_select.sizeHint())
+        self.csv_select = InputLine("Input CSV File")
+
+        # Destination selector
+        self.csv_destination = InputLine("Select CSV File Destination")
+
+        # destination Button
+        btn_dest_out = Button("Select Destination", self.select_destination)
 
         # setup HLAYOUT for top bar
 
-        top_Hbox = QHBoxLayout()
-        top_Hbox.addWidget(self.label)
-        top_Hbox.addWidget(self.btn_quit)
+        top_Hbox = layout_cls(LayoutEnum.HORIZONTAL)
+        top_Hbox.addWidgets([self.label, self.btn_quit])
 
         # setup hlayout for fileinput
-        csv_hbox = QHBoxLayout()
-        csv_hbox.addWidget(self.csv_select)
-        csv_hbox.addWidget(btn_test_function)
+        csv_hbox_input = layout_cls(LayoutEnum.HORIZONTAL)
+        csv_hbox_input.addWidgets([self.csv_select, btn_input_csv])
+
+        # setup Hlayout for Destination
+        csv_hbox_dest = layout_cls(LayoutEnum.HORIZONTAL)
+        csv_hbox_dest.addWidgets([self.csv_destination, btn_dest_out])
 
         # Toggle DARK MODE push button0
         self.btn_darkMode = QPushButton("Dark Mode")
         self.btn_darkMode.setCheckable(True)
-        self.btn_darkMode.setChecked(True)
+        self.btn_darkMode.setChecked(False)
         # self.btn_darkMode.clicked.connect(self.toggle_dark_theme)
 
         # Toggle Save xl files #
-        self.btn_save_xl = QCheckBox("Save Excel files")
-        self.btn_save_xl.setCheckable(True)
-        self.btn_save_xl.setChecked(False)
+        self.btn_save_xl = Checkbox("Save Excel files", self.save_excel_files_checked)
+
         self.save_xl = False
-        self.btn_save_xl.clicked.connect(self.save_excel_files_checked)
 
         # Delete Original File when complete
-        self.btn_delete_orig_file = QCheckBox("Delete Original File when done!")
-        self.btn_delete_orig_file.setCheckable(True)
-        self.del_orig_file = False
-        self.btn_delete_orig_file.clicked.connect(self.del_orig_files_checked)
+        self.btn_delete_orig_file = Checkbox(
+            "Delete Original File when done!", self.del_orig_files_checked
+        )
 
+        # Args layout
+        args_hbox_btn_layout = layout_cls(LayoutEnum.HORIZONTAL)
+        args_hbox_btn_layout.addWidgets([self.btn_save_xl, self.btn_delete_orig_file])
         # setup VLayout for all items
         vlayout = QVBoxLayout()
         vlayout.addLayout(top_Hbox)
-        vlayout.setContentsMargins(15, 0, 15, 100)
-        vlayout.addLayout(csv_hbox)
-        vlayout.addWidget(self.btn_save_xl)
-        vlayout.addWidget(self.btn_delete_orig_file)
+        vlayout.setContentsMargins(15, 0, 15, 0)
+
+        vlayout.addLayout(csv_hbox_input)
+        vlayout.addLayout(csv_hbox_dest)
+        vlayout.addLayout(args_hbox_btn_layout)
 
         vlayout.addWidget(btn_run_script)
         vlayout.addWidget(self.btn_darkMode)
@@ -141,32 +137,28 @@ class WindowInsert(QWidget):
         else:
             event.ignore()
 
-    def csv_gotten(self):
+    def select_csv_files(self):
         file_v = Bank_functions.CsvFunctions.get_file(self)
         # file_v = type(file_v)
         self.file_v = file_v
-        self.added_html = f"<font color=green size=5> {self.status} </font>"
-        self.label.setText(self.added_html + "Successfully added Files")
-        self.label.adjustSize()
+        self.label.updateText("Successfully added Files")
+
         # add file to text window
-        self.csv_select.setText(file_v)
+        self.csv_select.updateText(file_v)
 
-    def finishedHtml(self):
-
-        self.finished_html = f"<font color=green size=5> {self.status} </font>"
-        self.label.setText(self.finished_html + "Successfully Completed")
-        self.label.adjustSize()
+    def select_destination(self):
+        dest = Bank_functions.CsvFunctions.get_dest(self)
+        self.csv_destination.setText(dest)
+        self.label.updateText("Destination set!")
 
     def run_script(self):
-        process = Bank_functions.CsvConverter(self.file_v)
-        self.working_html = f"<font color=red size=5> {self.status} </font>"
-        self.label.setText(self.working_html + "Running Conversion")
-        self.label.adjustSize()
+        process = Bank_functions.CsvConverter(self.file_v, self.csv_destination.text())
+        self.label.updateText("Running Conversion")
         end_message = process.run_Main(
             save_xl=self.save_xl, del_orig_file=self.del_orig_file
         )
-        self.finishedHtml()
-        self.label.setText(self.working_html + end_message)
+        self.label.updateText(end_message, "green")
+        # self.label.setText(self.working_html + end_message)
 
     def save_excel_files_checked(self):
         if self.btn_save_xl.isChecked():

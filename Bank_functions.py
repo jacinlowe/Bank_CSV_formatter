@@ -23,15 +23,24 @@ class CsvFunctions(QObject):
         fnames = fnames[0][0]
         return fnames
 
+    @Slot(str, result=str)
+    def get_dest(self):
+        """
+        gets output directory
+        """
+        dest_name = QtWidgets.QFileDialog.getExistingDirectory(self, "select Dest")
+        return dest_name
+
 
 class CsvConverter:
-    def __init__(self, in_file):
+    def __init__(self, in_file, destination: str = None):
         # File import block
         self.input_file = in_file
         self.path = Path(self.input_file)
         self.file_name = self.path.stem
         self.directory = str(self.path.parent)
         self.new_name = ""
+        self.destination = destination if destination != None else self.directory
 
         # create temp directory
         self.temp_directory = ""
@@ -45,7 +54,7 @@ class CsvConverter:
 
     def run_Main(
         self, save_xl: bool = False, del_orig_file: bool = False
-    ):  # PASS IN ARGS for Saving Excel Files, Deleting temp folder
+    ) -> str:  # PASS IN ARGS for Saving Excel Files, Deleting temp folder
         try:
             # create the temp save dir
             self.make_temp_dir()
@@ -172,13 +181,13 @@ class CsvConverter:
             ).strftime("%m_%d_%Y")
             filenameprefix = "AwesomeLight Checking"
             filenamesuffix = ".csv"
-            googledrive = Path(
-                r"G:\My Drive\Awesome Light business files\Banking transactions\Account CSV\Processed"
-            )
+
+            destination = Path(f"{self.destination}\Processed")
+            destination.mkdir(exist_ok=True)
+
             new_name = f"{filenameprefix} {start_date_obj}-{end_date_obj}_{self.wb.sheetnames[sheet_num - 1]}{filenamesuffix}"
 
-            new_file_name = "".join([googledrive.as_posix(), "/", new_name])
-            # print(new_file_name)
+            new_file_name = "".join([destination.as_posix(), "/", new_name])
 
             # open up the new file
             with open(
